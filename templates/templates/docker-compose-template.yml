@@ -11,6 +11,9 @@ services:
       POSTGRES_PASSWORD: {{ .PostgresPassword }}
     volumes:
       - data-volume-{{ .UserID }}:/var/lib/postgresql/data
-
+{{- if .BackupEnabled }}
+  backup:
+    image: spinup/wal-g:latest
+{{- end}}
 volumes:
   data-volume-{{ .UserID }}:

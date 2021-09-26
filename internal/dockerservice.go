@@ -3,12 +3,13 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/rs/zerolog"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/rs/zerolog"
 )
 
 type LinePrefixLogger struct {
@@ -87,4 +88,24 @@ func NewPgExporterService(cli *client.Client, networkName, postgresUsername, pos
 		Image: "quay.io/prometheuscommunity/postgres-exporter",
 	}
 	return exporterSvc
+}
+
+func NewPgBackupService(cli *client.Client, awsAccessKey, awsAccessKeyId, pgHost, walgS3Prefix, networkName, postgresUsername, postgresPassword string) DockerService {
+	backupSvc := DockerService{
+		DockerClient:  cli,
+		Name:          "postgres_backup",
+		NetworkName:   networkName + "_default",
+		RestartPolicy: "no",
+		Environment: map[string]string{
+			"AWS_SECRET_ACCESS_KEY": awsAccessKey,
+			"AWS_ACCESS_KEY_ID":     awsAccessKeyId,
+			"PGHOST":                pgHost,
+			"PGPASSWORD":            postgresPassword,
+			"PGUSER":                postgresUsername,
+			"PGDATABASE":            "postgres",
+			"WALG_S3_PREFIX":        walgS3Prefix,
+		},
+		Image: "spinuphost/walg:latest",
+	}
+	return backupSvc
 }
